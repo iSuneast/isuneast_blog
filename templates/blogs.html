@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<a href="/newpost">Add New Blog</a>
+<br>
+<a href="/signup">Sign Up</a>
+<br>
+<a href="/login">Log In</a>
+<br>
+<a href="/logout">Log Out</a>
+<br>
+<a href="/.json">Main Page Json</a>
+<br>
+<a href="/flush">Flush Memcache</a>
+
+<p>
+    Queried {{cache_len}} seconds ago
+</p>
+
+<ul>
+{% for blog in blogs %}
+    <li>
+        {{ blog.render() | safe }}
+    </li>
+{% endfor %}
+</ul>
+
+{% endblock %}

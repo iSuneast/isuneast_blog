@@ -1,0 +1,12 @@
+<h2>
+    <a href="/{{ blog.key().id() }}">
+        {{ blog.subject }}
+    </a>
+
+    <br>
+
+    <a href="/{{ blog.key().id() }}.json">
+        {{ blog.subject }}.json
+    </a>
+</h2>
+    {{ blog.content.replace('\n', '<br>') | safe }}
