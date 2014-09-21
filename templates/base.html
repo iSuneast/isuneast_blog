@@ -13,6 +13,21 @@
         </a>
     </h1>
 
+<a href="/_history/{{wiki_url}}">History</a>
+
+{% if login_name and login_name != '' %}
+    <a href="/_edit/{{wiki_url}}">Edit</a>
+    |
+    Hi, {{login_name}}.
+    <a href="/logout">Log Out</a>
+    <br>
+{% else %}
+    <a href="/login">Log In</a>
+    |
+    <a href="/signup">Sign Up</a>
+    <br>
+{% endif %}
+
     {% block content %}
     {% endblock %}
 </body>

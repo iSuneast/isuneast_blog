@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<ul>
+{% for wiki in wikis %}
+    <li>
+        {{ wiki.created }}
+        <a href="/_edit{{wiki.url}}?created={{wiki.created}}">Edit</a>
+        <a href="{{wiki.url}}?created={{wiki.created}}">View</a>
+        <br>
+        <br>
+        {{ wiki.content | safe }}
+        <br>
+        <br>
+    </li>
+{% endfor %}
+</ul>
+
+{% endblock %}

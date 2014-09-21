@@ -39,6 +39,13 @@ class Handler(webapp2.RequestHandler):
         self.write(self.render_str(template, **kw))
 
 
+class BlogHandler(Handler):
+    def render(self, template, **kw):
+        login_name = self.request.cookies.get('name')
+        wiki_url = self.request.url.split('/')[-1]
+        super(BlogHandler, self).write(self.render_str(template, login_name=login_name, wiki_url=wiki_url, **kw))
+
+
 class Blogs(db.Model):
     subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
@@ -55,7 +62,7 @@ class Blogs(db.Model):
         return blog
 
 
-class NewPost(Handler):
+class NewPost(BlogHandler):
     def get(self):
         self.render("newpost.html")
 
@@ -94,14 +101,14 @@ def get_blog_by_id(blog_id):
     return blog, cache_time
 
 
-class BlogPage(Handler):
+class BlogPage(BlogHandler):
     def get(self, blog_id):
         blog, cache_time = get_blog_by_id(blog_id)
         cache_len = time.time() - cache_time
         self.render("permalink.html", blog=blog, cache_len=cache_len)
 
 
-class BlogPageJson(Handler):
+class BlogPageJson(BlogHandler):
     def get(self, blog_id):
         self.response.headers['Content-Type'] = 'application/json'
         blog, cache_time = get_blog_by_id(int(blog_id.split('.')[0]))
@@ -121,7 +128,7 @@ def get_blogs(update = False):
     return blogs, cache_time
 
 
-class MainPage(Handler):
+class MainPage(BlogHandler):
     def get(self):
         blogs, cache_time = get_blogs()
         cache_len = time.time() - cache_time
@@ -132,7 +139,7 @@ class MainPage(Handler):
         self.redirect("/newpost")
 
 
-class MainPageJson(Handler):
+class MainPageJson(BlogHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'application/json'
         blogs, cache_time = get_blogs()
@@ -146,7 +153,7 @@ class Users(db.Model):
     created = db.DateTimeProperty(auto_now_add = True)
 
 
-class SignupPage(Handler):
+class SignupPage(BlogHandler):
     USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
     PWD_RE = re.compile(r"^.{3,20}$")
     EMAIL_RE = re.compile(r"^[\S]+@[\S]+\.[\S]+$")
@@ -199,7 +206,7 @@ class SignupPage(Handler):
                 email=email, error_email=error_email)
 
 
-class LoginPage(Handler):
+class LoginPage(BlogHandler):
     def get(self):
         name = self.request.cookies.get('name')
         self.render('login.html', username=name)
@@ -231,34 +238,116 @@ class LoginPage(Handler):
             self.render('login.html', username=username, error=error)
 
 
-class LogoutPage(Handler):
+class LogoutPage(BlogHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.headers.add_header('Set-Cookie', str('name=; Path=/'))
         self.redirect('/signup')
 
 
-class WelcomePage(Handler):
+class WelcomePage(BlogHandler):
     def get(self):
         name = self.request.cookies.get('name')
         self.render('welcome.html', username=name)
 
 
-class FlushCache(Handler):
+class FlushCache(BlogHandler):
     def get(self):
         memcache.flush_all()
         self.redirect('/')
 
 
+class Wikis(db.Model):
+    content = db.TextProperty(required = True)
+    url = db.TextProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
+
+
+def get_wiki_by_url(wiki_url, created = None, fetch_all = False):
+    wikis = Wikis.all().order('-created')
+    ret = []
+    for wiki in wikis:
+        if wiki.url == wiki_url:
+            ret.append(wiki)
+            if created is not None and str(wiki.created) == created:
+                return wiki
+    if fetch_all:
+        return ret
+    elif len(ret) > 0:
+        return ret[0]
+
+
+class WikiPage(BlogHandler):
+    def get(self, wiki_url):
+        created = self.request.get('created')
+        wiki = get_wiki_by_url(wiki_url, created=created)
+        if wiki is None:
+            self.redirect('/_edit%s' % wiki_url)
+        else:
+            self.render('wiki.html', wiki=wiki)
+
+
+class EditPage(BlogHandler):
+    def get(self, wiki_url):
+        name = self.request.cookies.get('name')
+        if name is None or name is '':
+            self.redirect('/')
+            return
+
+        created = self.request.get('created')
+        wiki = get_wiki_by_url(wiki_url, created=created)
+        content = ''
+        if wiki is not None:
+            content = wiki.content
+        self.render('newwiki.html', content=content)
+
+    def post(self, wiki_url):
+        content = self.request.get('content')
+        if content:
+            wiki = Wikis(content=content, url=wiki_url)
+            wiki.put()
+
+            self.redirect('%s' % wiki_url)
+        else:
+            error_content = "Please input content!"
+            self.render("newwiki.html",
+                content=content, error_content=error_content)
+
+
+class HistoryPage(BlogHandler):
+    def get(self, wiki_url):
+        name = self.request.cookies.get('name')
+        if name is None or name is '':
+            self.redirect('/')
+            return
+
+        wikis = get_wiki_by_url(wiki_url, fetch_all=True)
+        content = ''
+        self.render('history.html', wikis=wikis)
+
+    def post(self, wiki_url):
+        content = self.request.get('content')
+        if content:
+            wiki = Wikis(content=content, url=wiki_url)
+            wiki.put()
+
+            self.redirect('%s' % wiki_url)
+        else:
+            error_content = "Please input content!"
+            self.render("newwiki.html",
+                content=content, error_content=error_content)
+
+
+PAGE_RE = r'(/(?:[a-zA-Z0-9_-]+/?)*)'
+
 application = webapp2.WSGIApplication([
-    ('/', MainPage),
-    ('/.json', MainPageJson),
-    ('/flush', FlushCache),
     ('/signup', SignupPage),
     ('/login', LoginPage),
     ('/logout', LogoutPage),
-    ('/newpost', NewPost),
+
     ('/welcome', WelcomePage),
-    ('/([0-9]*)', BlogPage),
-    ('/([0-9]*.json)', BlogPageJson)
+
+    ('/_edit' + PAGE_RE, EditPage),
+    ('/_history' + PAGE_RE, HistoryPage),
+    (PAGE_RE, WikiPage),
 ], debug=True)

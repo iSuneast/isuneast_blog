@@ -1,9 +1,10 @@
-# start server
-dev_appserver.py appengine-try-python-flask
+# start localhost server
+# localhost:8080
+# admin page: localhost:8000
+dev_appserver.py .
 
 # upload
 appcfg update .
 
 # addr
 http://isuneast.appspot.com/
-
