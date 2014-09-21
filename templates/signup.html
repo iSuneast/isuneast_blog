@@ -1,41 +1,61 @@
+
 {% extends "base.html" %}
 
 {% block content %}
+
+<h2>
+Sign Up
+</h2>
+
 <form method="post">
-    <label>
-        Username
-        <input type="text" name="username" value="{{username}}">
-        <div style="color: red">
-            {{error_name}}
-        </div>
-    </label>
-    <br>
+    <table>
+        <tr>
+            <td>
+                <label>
+                    UserName
+                </label>
+            </td>
+            <td>
+                <input type="text" name="username" value="{{username}}">
+            </td>
+        </tr>
 
-    <label>
-        Password
-        <input type="password" name="password">
-    </label>
-    <br>
+        <tr>
+            <td>
+                <label>
+                    Password
+                </label>
+            </td>
+            <td>
+                <input type="password" name="password">
+            </td>
+        </tr>
 
-    <label>
-        Verify Password
-        <input type="password" name="verify">
-    </label>
-    <div style="color: red">
-        {{error_pwd}}
-    </div>
-    <br>
+        <tr>
+            <td>
+                <label>
+                    Verify Password
+                </label>
+            </td>
+            <td>
+                <input type="password" name="verify">
+            </td>
+        </tr>
 
-    <label>
-        Email (optional)
-        <input type="text" name="email" value="{{email}}">
-    </label>
-    <div style="color: red">
-        {{error_email}}
-    </div>
-    <br>
+        <tr>
+            <td>
+                <div class="error">
+                    {{error}}
+                </div>
+            </td>
+        </tr>
 
-    <input type="submit">
+        <tr>
+            <td>
+                <input type="submit">
+            </td>
+        </tr>
+    </table>
 </form>
 
 {% endblock %}

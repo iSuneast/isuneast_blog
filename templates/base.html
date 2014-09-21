@@ -2,19 +2,35 @@
 
 <html>
 
-<head> 
-    <title>Blog</title>
+<head>
+    <link type="text/css" rel="stylesheet" href="/static/main.css" />
+    <title>Logger@iSuneast</title>
 </head>
 
 <body>
-    <h1>
-        <a href="/">
-        Blog Main Page
-        </a>
-    </h1>
 
-    {% block content %}
-    {% endblock %}
+<div>
+    <a href="/" class="main-title">
+        Wowow, I am MAN page
+    </a>
+</div>
+
+<div class="login-area">
+Hi, 
+{% if login_name and login_name != '' %}
+    {{login_name}}
+    <a href="/logout">Log Out</a>
+{% else %}
+    please
+    <a href="/login">Log In</a>
+    | 
+    <a href="/signup">Sign Up</a>
+{% endif %}
+</div>
+
+{% block content %}
+{% endblock %}
+
 </body>
 
 </html>

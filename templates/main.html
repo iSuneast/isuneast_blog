@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<a href="/newpost">Add New Post</a>
+
+<ul>
+    {% for post in posts %}
+    <li>
+        {{ post | safe }}
+    </li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

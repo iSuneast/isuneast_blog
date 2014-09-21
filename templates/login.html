@@ -1,25 +1,48 @@
+
 {% extends "base.html" %}
 
 {% block content %}
-<form method="post">
-    <label>
-        Username
-        <input type="text" name="username" value="{{username}}">
-        <div style="color: red">
-            {{error_name}}
-        </div>
-    </label>
-    <br>
 
-    <label>
-        Password
-        <input type="password" name="password">
-    </label>
-    <br>
-    <div style="color: red">
-        {{error}}
-    </div>
-    <input type="submit">
+<h2>
+Log In
+</h2>
+
+<form method="post">
+    <table>
+        <tr>
+            <td>
+                <label>
+                    UserName
+                </label>
+            </td>
+            <td>
+                <input type="text" name="username" value="{{username}}">
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <label>
+                    Password
+                </label>
+            </td>
+            <td>
+                <input type="password" name="password">
+            </td>
+        </tr>
+
+        <tr>
+            <div class="error">
+                {{error}}
+            </div>
+        </tr>
+
+        <tr>
+            <td>
+                <input type="submit">
+            </td>
+        </tr>
+    </table>
 </form>
 
 {% endblock %}
