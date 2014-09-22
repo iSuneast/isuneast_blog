@@ -49,6 +49,15 @@ label {
   font-size: 20px;
 }
 
+table {
+  display: block;
+  font-size: 20px;
+  text-align: center;
+  margin-left: 5%;
+  margin-right: 5%;
+  width: 90%;
+}
+
 label + label {
     margin-top: 20px;
 }

@@ -9,11 +9,10 @@ import json
 import webapp2
 import jinja2
 import StringIO
-import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
+import pprint
 from google.appengine.ext import db
-
+plt.switch_backend('Agg')
 
 class Handler(webapp2.RequestHandler):
     __template_dir = os.path.join(os.path.dirname(__file__), 'templates')
@@ -188,17 +187,7 @@ class SignUpPage(Handler):
         self.login(user)
 
 
-class MainPage(Handler):
-    def get(self):
-#        self.render('main.html')
-        plt.plot(np.random.random((20)),"r-")
-        sio = cStringIO.StringIO()
-        plt.savefig(sio, format="png")
-        self.response.headers['Content-Type'] = 'image/png'
-
-        self.response.out.write(sio.getvalue())
-
-class Diary(db.Model):
+class SportDiary(db.Model):
     created = db.StringProperty(required = True)
     content = db.StringProperty(required = True)
 
@@ -207,66 +196,86 @@ class Diary(db.Model):
         return Diary.all().filter('created = ', created).get()
 
     @classmethod
-    def insert_diary(cls, created, content):
-        diary = cls.by_created(created)
+    def insert(cls, created, content):
+        activity = cls.by_created(created)
         if not diary:
             Diary(created=created, content=content).put()
             return True
         return False
 
 
-class NewPostPage(Handler):
+class MainPage(Handler):
     def get(self):
-        if not self.valid_cookie_login():
-            self.redirect('/login')
-            return 
-        num_new_entry = self.parse('http://i.cs.hku.hk/~wbtang/have_fun.txt')
+        self.render('main.html', activity=Activity().content())
 
-        plt.plot(np.random.random((20)))
-        sio = StringIO.StringIO()
-        plt.savefig(sio, format="png")
-        img_b64 = sio.getvalue().encode("base64").strip()
-        plt.clf()
-        sio.close()
-        self.response.write("""<html><body>""")
-        self.response.write("<img src='data:image/png;base64,%s'/>" % img_b64)
-        self.response.write("""</body> </html>""")
 
-    def parse(self, url):
+class Activity(Handler):
+    def content(self):
+        x, y, labels = self.parse()
+        img_b64 = self.draw(x, y, labels)
+        activity = {'date': x, 'details': y, 'activity': labels}
+        return self.render_str('activity.html', image_activity=img_b64, 
+            date = x, activity = y, labels = labels)
+
+    @classmethod
+    def parse(cls):
+        url = 'http://i.cs.hku.hk/~wbtang/have_fun.txt'
         u = urllib2.urlopen(url)
-        created = ''
+
+        activity = ['RUN', 'PU', 'HB', 'SU']
+        activity_full = ['RUN', 'Pull Up', 'Horizontal Bar', 'Sit Up']
         data = {}
-        num_new_entry = 0
+        date = ''
         for line in u.readlines():
             tokens = filter(bool, line.replace('\r', '').replace('\n', '').split(' '))
             if len(tokens) == 0:
                 continue
 
             if tokens[0] == '#':
-                created = tokens[1]
+                date = tokens[1]
+                if date not in data:
+                    data[date] = {act: [] for act in activity}
             elif tokens[0] == '>':
-                data[tokens[1].upper()] = tokens[2:]
-            elif tokens[0] == '<':
-                content = json.dumps(data)
-                if not Diary.insert_diary(created, content):
-                    break
+                if date not in data:
+                    continue
+                act = tokens[1].upper()
+                if act not in activity:
+                    print('UNKNOWN activity: "%s"' % act)
                 else:
-                    num_new_entry += 1
-                data.clear()
-            elif created != '':
-                log = ' '.join(tokens)
-                key = 'log'
-                if key in data:
-                    data[key].append(log)
-                else:
-                    data[key] = [log]
+                    data[date][act] = [int(num) for num in tokens[2:]]
+            else:
+                note = ' '.join(tokens)
+                
 
-        return num_new_entry
+        x = sorted(data.iterkeys())
+        y = []
+        labels = activity_full
+        for key in x:
+            day = data[key]
+            y.append([day[act] for act in activity])
+
+        return x, y, labels
+
+    @classmethod
+    def draw(self, x, y, labels):
+        for id in range(len(labels)):
+            ax = plt.subplot(len(labels), 1, id+1)
+            ax.plot(x, [sum(y[i][id]) for i in range(len(y))], 'ro-', markersize=12)
+            plt.xticks([])
+            plt.title(labels[id])
+        plt.tight_layout()
+
+        sio = StringIO.StringIO()
+        plt.savefig(sio, format="png")
+        img_b64 = sio.getvalue().encode("base64").strip()
+        plt.clf()
+        sio.close()
+
+        return img_b64
 
 
 application = webapp2.WSGIApplication([
     ('/', MainPage),
-    ('/newpost', NewPostPage),
     ('/login', LogInPage),
     ('/signup', SignUpPage),
     ('/logout', LogOutPage),
