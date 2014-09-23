@@ -2,6 +2,12 @@
 
 {% block content %}
 
+{% if login_name and login_name == 'isuneast' %}
+<form>
+    <input type='submit' style='right: 0px; position: absolute; color: gray;'
+         name='flush_db' value='Flush Database'/>
+</form>
+{% endif %}
 {{ activity | safe }}
 
 {% endblock %}

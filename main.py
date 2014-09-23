@@ -14,6 +14,7 @@ import pprint
 from google.appengine.ext import db
 plt.switch_backend('Agg')
 
+
 class Handler(webapp2.RequestHandler):
     __template_dir = os.path.join(os.path.dirname(__file__), 'templates')
     __jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(__template_dir),
@@ -30,9 +31,12 @@ class Handler(webapp2.RequestHandler):
         user_id = self.request.cookies.get('user_id')
         return Secure.valid_secure_value(user_id)
 
+    def goto_login(self):
+        self.redirect('/login')
+
     def render(self, template, **kw):
         if self.valid_cookie_login():
-            username = self.request.cookies.get('login_name')
+            username = self.get_login_name()
             if username:
                 kw['login_name'] = username
         self.write(self.render_str(template, **kw))
@@ -45,8 +49,15 @@ class Handler(webapp2.RequestHandler):
     def set_secure_cookie(self, name, val):
         self.set_cookie(name, Secure.make_secure_value(val))
 
-    def read_secure_cookie(self, name):
+    def read_cookie(self, name):
         cookie_val = self.request.cookies.get(name)
+        return cookie_val
+
+    def get_login_name(self):
+        return self.request.cookies.get('login_name')
+
+    def read_secure_cookie(self, name):
+        cookie_val = read_cookie(name)
         return cookie_val and Secure.check_secure_val(cookie_val)
 
     def login(self, user):
@@ -66,6 +77,10 @@ class Secure:
     @classmethod
     def make_secure_value(cls, val):
         return '%s|%s' % (val, hmac.new(cls.__secret, val).hexdigest())
+
+    @classmethod
+    def get_god_name(cls):
+        return 'isuneast'
 
     @classmethod
     def valid_secure_value(cls, secure_value):
@@ -98,10 +113,12 @@ class User(db.Model):
 
     @classmethod
     def by_name(cls, username):
+        username = username.lower()
         return User.all().filter('username = ', username).get()
 
     @classmethod
     def register(cls, username, password):
+        username = username.lower()
         password_hash = Secure.make_password_hash(username, password)
         user = User(username = username, password_hash = password_hash)
         user.put()
@@ -187,43 +204,113 @@ class SignUpPage(Handler):
         self.login(user)
 
 
-class SportDiary(db.Model):
-    created = db.StringProperty(required = True)
-    content = db.StringProperty(required = True)
-
-    @classmethod
-    def by_created(cls, created):
-        return Diary.all().filter('created = ', created).get()
-
-    @classmethod
-    def insert(cls, created, content):
-        activity = cls.by_created(created)
-        if not diary:
-            Diary(created=created, content=content).put()
-            return True
-        return False
-
-
 class MainPage(Handler):
     def get(self):
+        flush_db = self.request.get('flush_db')
+        if flush_db != '':
+            if not self.valid_cookie_login() or self.get_login_name() != Secure.get_god_name():
+                self.goto_login()
+            else:
+                Activity().flush()
+                self.redirect('/')
+                return 
         self.render('main.html', activity=Activity().content())
+
+
+class Diary(db.Model):
+    subject = db.StringProperty(required = True)
+    content = db.TextProperty(required = True)
+
+    @classmethod
+    def by_subject(cls, subject):
+        return cls.all().filter('subject = ', subject).get()
+
+    @classmethod
+    def clear(cls):
+        for diary in cls.all():
+            diary.delete()
+
+    @classmethod
+    def insert_diary(cls, subject, content):
+        diary = cls.by_subject(subject)
+        if diary:
+            if content != diary.content:
+                diary.content = content
+                diary.put()
+        else:
+            diary = Diary(subject = subject, content = content)
+            diary.put()
 
 
 class Activity(Handler):
     def content(self):
-        x, y, labels = self.parse()
+        cache = Diary.by_subject('cache')
+        if cache:
+            return eval(cache.content)
+        else:
+            return self.flush()
+
+    def flush(self):
+        url = 'http://i.cs.hku.hk/~wbtang/have_fun.txt'
+        activity = ['run', 'pull up', 'horizontal bar', 'sit up']
+
+        Diary.insert_diary(subject = 'activity', content = repr(activity))
+        Diary.insert_diary(subject = 'since', content = '20140911')
+
+        self.parse_raw_data(url, activity)
+        date, activity, labels = self.parse_database(activity)
+        x, y = self.decode_data(date, activity, labels, since='20140911')
         img_b64 = self.draw(x, y, labels)
-        activity = {'date': x, 'details': y, 'activity': labels}
-        return self.render_str('activity.html', image_activity=img_b64, 
-            date = x, activity = y, labels = labels)
+
+        cache = self.render_str('activity.html', image_activity=img_b64, 
+            date = date, activity = activity, labels = labels)
+        Diary.insert_diary(subject = 'cache', content = repr(cache))
+
+        return cache
 
     @classmethod
-    def parse(cls):
-        url = 'http://i.cs.hku.hk/~wbtang/have_fun.txt'
-        u = urllib2.urlopen(url)
+    def decode_data(cls, date, activity, labels, since):
+        total = cls.date_dif(date[-1], since)
+        x = [i for i in range(total+1)]
+        y = [[0 for j in range(len(labels))] for i in range(total+1)]
+        for i in range(len(date)):
+            pos = cls.date_dif(date[i], since) 
+            y[pos] = [sum(t) for t in activity[i]]
+        return x, y
 
-        activity = ['RUN', 'PU', 'HB', 'SU']
-        activity_full = ['RUN', 'Pull Up', 'Horizontal Bar', 'Sit Up']
+    @classmethod
+    def date_dif(cls, date, since):
+        return int(date) - int(since)
+
+    @classmethod
+    def parse_database(cls, activity):
+        data = {}
+        for diary in Diary.all():
+            if diary.subject.isdigit():
+                data[diary.subject] = eval(diary.content)
+
+        x = sorted(data.iterkeys())
+        y = []
+        labels = activity
+        for key in x:
+            day = data[key]
+            format_day = []
+            for act in activity:
+                if act in day:
+                    format_day.append(day[act])
+                else:
+                    format_day.append([0])
+            y.append(format_day)
+
+        return x, y, activity
+
+    @classmethod
+    def parse_raw_data(cls, url, activity):
+        u = urllib2.urlopen(url)
+        if u is None:
+            print '---------------- Can not open "%s"' % url
+            return
+
         data = {}
         date = ''
         for line in u.readlines():
@@ -232,35 +319,29 @@ class Activity(Handler):
                 continue
 
             if tokens[0] == '#':
+                if data != {}:
+                    Diary.insert_diary(subject = date, content = repr(data))
                 date = tokens[1]
-                if date not in data:
-                    data[date] = {act: [] for act in activity}
+                data = {}
             elif tokens[0] == '>':
-                if date not in data:
+                if date == '':
                     continue
-                act = tokens[1].upper()
+                act = ' '.join(tokens[1].split('_')).lower()
                 if act not in activity:
                     print('UNKNOWN activity: "%s"' % act)
                 else:
-                    data[date][act] = [int(num) for num in tokens[2:]]
+                    data[act] = [int(num) for num in tokens[2:]]
             else:
-                note = ' '.join(tokens)
-                
+                pass
+        if data != {}:
+            Diary.insert_diary(subject = date, content = repr(data))
 
-        x = sorted(data.iterkeys())
-        y = []
-        labels = activity_full
-        for key in x:
-            day = data[key]
-            y.append([day[act] for act in activity])
-
-        return x, y, labels
 
     @classmethod
-    def draw(self, x, y, labels):
+    def draw(cls, x, y, labels):
         for id in range(len(labels)):
             ax = plt.subplot(len(labels), 1, id+1)
-            ax.plot(x, [sum(y[i][id]) for i in range(len(y))], 'ro-', markersize=12)
+            ax.plot(x, [y[i][id] for i in range(len(y))], 'ro-', markersize=12)
             plt.xticks([])
             plt.title(labels[id])
         plt.tight_layout()

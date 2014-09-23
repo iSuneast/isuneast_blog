@@ -1,0 +1,44 @@
+
+<h2>
+    Activity (Since Sept 11, 2014)
+</h2>
+
+<img src='data:image/png;base64,{{image_activity}}'/>
+
+<h2>
+Table
+</h2>
+<div>
+<table>
+    <tr>
+        <td width="20%">
+            Date
+        </td>
+        {% for label in labels %}
+        <td width="20%">
+            {{ label }}
+        </td>
+        {% endfor %}
+    </tr>
+
+    {% for i in range(date|length, 0, -1) %}
+    <tr>
+        <td>
+            {{ date[i-1] }}
+        </td>
+        {% for val in activity[i-1] %}
+        <td>
+            {% if val == [0] or val == [] %}
+                -
+            {% else %}
+                {% for v in val %}
+                    {{ v }}
+                {% endfor %}
+            {% endif %}
+        </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+
+</table>
+</div>
