@@ -11,6 +11,7 @@ import jinja2
 import StringIO
 import matplotlib.pyplot as plt
 import pprint
+import datetime
 from google.appengine.ext import db
 plt.switch_backend('Agg')
 
@@ -206,12 +207,12 @@ class SignUpPage(Handler):
 
 class MainPage(Handler):
     def get(self):
-        flush_db = self.request.get('flush_db')
-        if flush_db != '':
+        touch_db = self.request.get('touch_db')
+        if touch_db != '':
             if not self.valid_cookie_login() or self.get_login_name() != Secure.get_god_name():
                 self.goto_login()
             else:
-                Activity().flush()
+                Activity().flush(touch_db == 'reset')
                 self.redirect('/')
                 return 
         self.render('main.html', activity=Activity().content())
@@ -250,7 +251,9 @@ class Activity(Handler):
         else:
             return self.flush()
 
-    def flush(self):
+    def flush(self, reset = False):
+        if reset:
+            Diary.clear()
         url = 'http://i.cs.hku.hk/~wbtang/have_fun.txt'
         activity = ['run', 'pull up', 'horizontal bar', 'sit up']
 
@@ -280,7 +283,9 @@ class Activity(Handler):
 
     @classmethod
     def date_dif(cls, date, since):
-        return int(date) - int(since)
+        d0 = datetime.date(int(date[:4]), int(date[4:6]), int(date[6:8]))
+        d1 = datetime.date(int(since[:4]), int(since[4:6]), int(since[6:8]))
+        return (d0-d1).days
 
     @classmethod
     def parse_database(cls, activity):
