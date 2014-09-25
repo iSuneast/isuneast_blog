@@ -2,15 +2,21 @@
 
 {% block content %}
 
-{% if login_name and login_name == 'isuneast' %}
+<h2>
+    Amazzzzzzzing <a href='/diary'>Diary</a>!!!
+</h2>
 
-<div>
-    <a href='/?touch_db=reset' class='login-link'>Reset Database</a>
-    |
-    <a href='/?touch_db=update' class='login-link'>Update Database</a>
-</div>
+<h2>
+    Activity (Since Sept 11, 2014)
+    {% if login_name == 'isuneast' %}
+    <div class='newentry-link'>
+        <a href='/?touch_db=reset' class='login-link'>Reset Database</a>
+        |
+        <a href='/?touch_db=update' class='login-link'>Update Database</a>
+    </div>
+    {% endif %}
+</h2>
 
-{% endif %}
 {{ activity | safe }}
 
 {% endblock %}

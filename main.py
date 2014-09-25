@@ -24,8 +24,9 @@ class Handler(webapp2.RequestHandler):
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
 
-    def render_str(self, template, **params):
-        t = self.__jinja_env.get_template(template)
+    @classmethod
+    def render_str(cls, template, **params):
+        t = cls.__jinja_env.get_template(template)
         return t.render(params)
 
     def valid_cookie_login(self):
@@ -40,6 +41,8 @@ class Handler(webapp2.RequestHandler):
             username = self.get_login_name()
             if username:
                 kw['login_name'] = username
+        kw['system_time'] = Secure.get_system_time()
+
         self.write(self.render_str(template, **kw))
 
     def set_cookie(self, name, val):
@@ -82,6 +85,14 @@ class Secure:
     @classmethod
     def get_god_name(cls):
         return 'isuneast'
+
+    @classmethod
+    def get_system_time(cls):
+        return cls.format_time(datetime.datetime.now())
+
+    @classmethod
+    def format_time(cls, time):
+        return time.strftime('%b %d, %Y %H:%M:%S')
 
     @classmethod
     def valid_secure_value(cls, secure_value):
@@ -218,7 +229,7 @@ class MainPage(Handler):
         self.render('main.html', activity=Activity().content())
 
 
-class Diary(db.Model):
+class SportDiary(db.Model):
     subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
 
@@ -239,13 +250,13 @@ class Diary(db.Model):
                 diary.content = content
                 diary.put()
         else:
-            diary = Diary(subject = subject, content = content)
+            diary = SportDiary(subject = subject, content = content)
             diary.put()
 
 
 class Activity(Handler):
     def content(self):
-        cache = Diary.by_subject('cache')
+        cache = SportDiary.by_subject('cache')
         if cache:
             return eval(cache.content)
         else:
@@ -253,12 +264,12 @@ class Activity(Handler):
 
     def flush(self, reset = False):
         if reset:
-            Diary.clear()
+            SportDiary.clear()
         url = 'http://i.cs.hku.hk/~wbtang/have_fun.txt'
         activity = ['run', 'pull up', 'horizontal bar', 'sit up']
 
-        Diary.insert_diary(subject = 'activity', content = repr(activity))
-        Diary.insert_diary(subject = 'since', content = '20140911')
+        SportDiary.insert_diary(subject = 'activity', content = repr(activity))
+        SportDiary.insert_diary(subject = 'since', content = '20140911')
 
         self.parse_raw_data(url, activity)
         date, activity, labels = self.parse_database(activity)
@@ -266,8 +277,9 @@ class Activity(Handler):
         img_b64 = self.draw(x, y, labels)
 
         cache = self.render_str('activity.html', image_activity=img_b64, 
-            date = date, activity = activity, labels = labels)
-        Diary.insert_diary(subject = 'cache', content = repr(cache))
+            date = date, activity = activity, labels = labels,
+            last_updated = Secure.get_system_time())
+        SportDiary.insert_diary(subject = 'cache', content = repr(cache))
 
         return cache
 
@@ -290,7 +302,7 @@ class Activity(Handler):
     @classmethod
     def parse_database(cls, activity):
         data = {}
-        for diary in Diary.all():
+        for diary in SportDiary.all():
             if diary.subject.isdigit():
                 data[diary.subject] = eval(diary.content)
 
@@ -325,7 +337,7 @@ class Activity(Handler):
 
             if tokens[0] == '#':
                 if data != {}:
-                    Diary.insert_diary(subject = date, content = repr(data))
+                    SportDiary.insert_diary(subject = date, content = repr(data))
                 date = tokens[1]
                 data = {}
             elif tokens[0] == '>':
@@ -339,7 +351,7 @@ class Activity(Handler):
             else:
                 pass
         if data != {}:
-            Diary.insert_diary(subject = date, content = repr(data))
+            SportDiary.insert_diary(subject = date, content = repr(data))
 
 
     @classmethod
@@ -360,8 +372,67 @@ class Activity(Handler):
         return img_b64
 
 
+class Diary(db.Model):
+    subject = db.StringProperty(required = True)
+    content = db.TextProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
+
+    def render(self):
+        html_content = eval(self.content).replace('\n', '<br>')
+        return Handler.render_str('diary.html',
+            subject = self.subject,
+            content = html_content,
+            created = Secure.format_time(self.created))
+    @classmethod
+    def clear(cls):
+        for diary in cls.all():
+            diary.delete()
+
+
+class DiaryPage(Handler):
+    def get(self):
+        touch_db = self.request.get('touch_db')
+        if touch_db == 'reset':
+            if self.valid_cookie_login() and self.get_login_name() == Secure.get_god_name():
+                Diary.clear()
+                self.redirect('/diary')
+                return 
+            else:
+                self.goto_login()
+                return 
+        diaries = Diary.all().order('-created')
+        self.render('diaries.html', diaries = diaries)
+
+
+class NewDiaryPage(Handler):
+    def get(self):
+        if not self.valid_cookie_login() or self.get_login_name() != Secure.get_god_name():
+            self.goto_login()
+            return
+        self.render('newdiary.html')
+
+    def post(self):
+        subject = self.request.get('subject')
+        content = self.request.get('content')
+        error = ''
+        if not subject:
+            error += 'subject is empty!!!'
+        elif not content:
+            error += 'content is empty!!!'
+        if error != '':
+            self.render('newdiary.html', subject=subject, content=content,
+                 error=error)
+        else:
+            diary = Diary(subject=subject, content=repr(content))
+            diary.put()
+
+            self.redirect('/diary')
+
+
 application = webapp2.WSGIApplication([
     ('/', MainPage),
+    ('/diary', DiaryPage),
+    ('/newdiary', NewDiaryPage),
     ('/login', LogInPage),
     ('/signup', SignUpPage),
     ('/logout', LogOutPage),

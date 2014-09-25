@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>
+    Diary (Since Sept 25, 2014)
+
+    {% if login_name == 'isuneast' %}
+    <div class='newentry-link'>
+        <a href='/diary?touch_db=reset' class='login-link'>Reset Diary Database</a>
+        |
+        <a href='/newdiary' class='login-link'>New Diary</a>
+    </div>
+    {% endif %}
+</h2>
+
+
+<ul>
+{% for diary in diaries %}
+    <li>
+    {{ diary.render() | safe }}
+    </li>
+{% endfor %}
+</ul>
+
+{% endblock %}

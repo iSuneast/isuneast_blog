@@ -9,6 +9,13 @@ body {
     color: #333;
 }
 
+.newentry-link {
+    font-size: 19px;
+    color: gray;
+    position: absolute;
+    right: 10px;
+}
+
 .login-area {
     font-size: 13px;
     color: gray;
