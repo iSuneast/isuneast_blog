@@ -12,6 +12,7 @@ import StringIO
 import matplotlib.pyplot as plt
 import pprint
 import datetime
+from pytz.gae import pytz
 from google.appengine.ext import db
 plt.switch_backend('Agg')
 
@@ -41,7 +42,7 @@ class Handler(webapp2.RequestHandler):
             username = self.get_login_name()
             if username:
                 kw['login_name'] = username
-        kw['system_time'] = Secure.get_system_time()
+        kw['system_time'] = Secure.get_format_system_time()
 
         self.write(self.render_str(template, **kw))
 
@@ -88,11 +89,16 @@ class Secure:
 
     @classmethod
     def get_system_time(cls):
-        return cls.format_time(datetime.datetime.now())
+        return datetime.datetime.now(pytz.timezone('Hongkong'))
 
     @classmethod
-    def format_time(cls, time):
-        return time.strftime('%b %d, %Y %H:%M:%S')
+    def get_format_system_time(cls):
+        return cls.format_time(cls.get_system_time())
+
+    @classmethod
+    def format_time(cls, time, hours_delta = 0):
+        time = time + datetime.timedelta(hours=hours_delta)
+        return time.strftime('%b %d, %Y %H:%M:%S HKT')
 
     @classmethod
     def valid_secure_value(cls, secure_value):
@@ -225,7 +231,7 @@ class MainPage(Handler):
             else:
                 Activity().flush(touch_db == 'reset')
                 self.redirect('/')
-                return 
+            return 
         self.render('main.html', activity=Activity().content())
 
 
@@ -278,7 +284,7 @@ class Activity(Handler):
 
         cache = self.render_str('activity.html', image_activity=img_b64, 
             date = date, activity = activity, labels = labels,
-            last_updated = Secure.get_system_time())
+            last_updated = Secure.get_format_system_time())
         SportDiary.insert_diary(subject = 'cache', content = repr(cache))
 
         return cache
@@ -375,31 +381,39 @@ class Activity(Handler):
 class Diary(db.Model):
     subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
-    created = db.DateTimeProperty(auto_now_add = True)
+    created = db.DateTimeProperty(required = True)
 
-    def render(self):
-        html_content = eval(self.content).replace('\n', '<br>')
-        return Handler.render_str('diary.html',
-            subject = self.subject,
-            content = html_content,
-            created = Secure.format_time(self.created))
+    def get_subject(self):
+        return self.subject
+
+    def get_content(self, raw=False):
+        if raw:
+            return eval(self.content)
+        return eval(self.content).replace('\n', '<br>')
+
+    def get_created(self):
+        return Secure.format_time(self.created, 8)
+
+    def get_id(self):
+        return self.key().id()
+
     @classmethod
-    def clear(cls):
-        for diary in cls.all():
-            diary.delete()
+    def update(cls, subject, content, id):
+        diary = None
+        if id:
+            diary = Diary.get_by_id(id)
+        if diary:
+            diary.subject = subject
+            diary.content = content
+        else:
+            diary = Diary(subject=subject, content=content, 
+                created = Secure.get_system_time())
+        
+        diary.put()
 
 
 class DiaryPage(Handler):
     def get(self):
-        touch_db = self.request.get('touch_db')
-        if touch_db == 'reset':
-            if self.valid_cookie_login() and self.get_login_name() == Secure.get_god_name():
-                Diary.clear()
-                self.redirect('/diary')
-                return 
-            else:
-                self.goto_login()
-                return 
         diaries = Diary.all().order('-created')
         self.render('diaries.html', diaries = diaries)
 
@@ -409,6 +423,19 @@ class NewDiaryPage(Handler):
         if not self.valid_cookie_login() or self.get_login_name() != Secure.get_god_name():
             self.goto_login()
             return
+
+        diary_id = self.request.get('id')
+        if diary_id:
+            diary = Diary.get_by_id(long(diary_id))
+            if diary:
+                op = self.request.get('op')
+                if op == 'del':
+                    diary.delete()
+                    self.redirect('/diary')
+                else:
+                    self.render('newdiary.html', subject=diary.subject, 
+                        content=diary.get_content(raw=True))
+                    return 
         self.render('newdiary.html')
 
     def post(self):
@@ -422,11 +449,16 @@ class NewDiaryPage(Handler):
         if error != '':
             self.render('newdiary.html', subject=subject, content=content,
                  error=error)
-        else:
-            diary = Diary(subject=subject, content=repr(content))
-            diary.put()
+            return
 
-            self.redirect('/diary')
+        diary_id = self.request.get('id')
+        if not diary_id:
+            diary_id = 0
+        else:
+            diary_id = long(diary_id)
+        Diary.update(subject=subject, content=repr(content), id=diary_id)
+
+        self.redirect('/diary')
 
 
 application = webapp2.WSGIApplication([

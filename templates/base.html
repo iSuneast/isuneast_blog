@@ -1,35 +1,33 @@
 <!DOCTYPE html>
 
-<html>
-
+<html lang="en">
 <head>
-    <link rel="stylesheet" href="/static/main.css" />
-    <title>Sport Diary@iSuneast</title>
+    <meta charset="utf-8">
+    <title>Diary@iSuneast</title>
+    <!-- saved from url=(0014)about:internet -->
+    <link href="/static/main.css" rel="stylesheet"/>
 </head>
 
 <body>
+<script src="/static/bootstrap.js"></script>
 
-<div>
+<div style='display: block;text-align: center;'>
     <a href="/" class="main-title">
-        Wowow, I am MAN page
+        Wowow, 
     </a>
-    <div style='color: gray; text-decoration: none; font-size: 13px; position: absolute; right: 10px;'>
-        System Time: {{system_time}}
-    </div>
-    <br>
-    <h2 style='text-align: center'>苟有恒, 何必三更起五更眠; 最无益, 莫过一日暴十日寒</h2>
+    <a href="/login" class="main-title" style="font-size: 64px;">
+        <i>I</i>
+    </a>
+    <a href="/" class="main-title">
+        am MAN page
+    </a>
 </div>
 
 <div class="login-area">
-Hi, 
 {% if login_name and login_name != '' %}
+Hi, 
     {{login_name}}
     <a href="/logout">Log Out</a>
-{% else %}
-    please
-    <a href="/login">Log In</a>
-    | 
-    <a href="/signup">Sign Up</a>
 {% endif %}
 </div>
 

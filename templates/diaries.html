@@ -7,8 +7,6 @@
 
     {% if login_name == 'isuneast' %}
     <div class='newentry-link'>
-        <a href='/diary?touch_db=reset' class='login-link'>Reset Diary Database</a>
-        |
         <a href='/newdiary' class='login-link'>New Diary</a>
     </div>
     {% endif %}
@@ -18,7 +16,24 @@
 <ul>
 {% for diary in diaries %}
     <li>
-    {{ diary.render() | safe }}
+
+    <h2>
+        {{ diary.get_subject() }}
+        <div class='newentry-link' style='font-size: 13px'>
+            {% if login_name == 'isuneast' %}
+            {
+            <a href='/newdiary?id={{diary.get_id()}}&op=del' class='login-link'>Delete</a>
+            |
+            <a href='/newdiary?id={{diary.get_id()}}&op=edit' class='login-link'>Edit</a>
+            }
+            {% endif %}
+
+            {{ diary.get_created() }}
+        </div>
+    </h2>
+
+    {{ diary.get_content() | safe }}
+
     </li>
 {% endfor %}
 </ul>

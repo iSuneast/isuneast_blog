@@ -1,8 +1,13 @@
 
 <h2>
     {{ subject }}
-    <div class='newentry-link' style='font-size: 13px'>
+    <div class='editor-link'>
         {{ created }}
+        {% if login_name == 'isuneast' %}
+        <a href='./edit' class='editor-link'>Delete</a>
+        |
+        <a href='./edit' class='editor-link'>Edit</a>
+        {% endif %}
     </div>
 </h2>
 
