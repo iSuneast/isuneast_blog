@@ -2,13 +2,13 @@
 
 {% block content %}
 
-<h2>
-    Amazzzzzzzing <a href='/diary'>Diary</a>!!!
-</h2>
+<h1>
+    Amazzzzzzzing <a href='/diary' style="font-family: Kranky;">Diary!!!</a>
+</h1>
 
 
-<h2>
-    Activity (Since Sept 11, 2014)
+<h1>
+    Exercise <a href='https://twitter.com/isuneast' style="font-family: Kranky;">Records</a>
     {% if login_name == 'isuneast' %}
     <div class='newentry-link'>
         <a href='/?touch_db=reset' class='login-link'>Reset Database</a>
@@ -16,7 +16,8 @@
         <a href='/?touch_db=update' class='login-link'>Update Database</a>
     </div>
     {% endif %}
-</h2>
+    <br>
+</h1>
 
 {{ activity | safe }}
 

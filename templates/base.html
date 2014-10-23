@@ -4,24 +4,25 @@
 <head>
     <meta charset="utf-8">
     <title>Diary@iSuneast</title>
+    <link href='http://fonts.googleapis.com/css?family=Inconsolata|Kranky|Open+Sans:400,700&v2' rel="stylesheet">
     <!-- saved from url=(0014)about:internet -->
     <link href="/static/main.css" rel="stylesheet"/>
+    <script src="/static/bootstrap.js"></script>
 </head>
 
 <body>
-<script src="/static/bootstrap.js"></script>
 
-<div style='display: block;text-align: center;'>
-    <a href="/" class="main-title">
-        Wowow, 
-    </a>
-    <a href="/login" class="main-title" style="font-size: 64px;">
-        <i>I</i>
-    </a>
-    <a href="/" class="main-title">
-        am MAN page
-    </a>
-</div>
+<header>
+    <hgroup>
+    <h1>
+        <a href="/login" style="font-size: 64px;"><i>I</i></a>
+        <a href="/">, am the MAN page</a>
+    </h1>
+    <h2>
+        <a href="http://i.cs.hku.hk/~wbtang/">BTW, who am I?</a>
+    </h2>
+    </hgroup>
+</header>
 
 <div class="login-area">
 {% if login_name and login_name != '' %}
@@ -33,7 +34,6 @@ Hi,
 
 {% block content %}
 {% endblock %}
-
 </body>
 
 <br>

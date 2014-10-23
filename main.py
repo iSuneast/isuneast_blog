@@ -1,3 +1,4 @@
+#encoding:utf-8
 import os
 import re
 import random
@@ -69,28 +70,26 @@ class Activity(Handler):
         if reset:
             SportDiary.clear()
         url = 'http://i.cs.hku.hk/~wbtang/have_fun.txt'
-        activity = ['run', 'pull up', 'push up', 'sit up'] # , 'horizontal bar'
+        event_en = ['run', 'pull up', 'push up'] # , 'sit up', 'horizontal bar'
+        event_cn = [u'跑步', u'引体向上', u'俯卧撑']
 
-        SportDiary.insert_diary(subject = 'activity', content = repr(activity))
-        SportDiary.insert_diary(subject = 'since', content = '20140911')
-
-        self.parse_raw_data(url, activity)
-        date, activity, labels = self.parse_database(activity)
-        x, y = self.decode_data(date, activity, labels, since='20140911')
-        img_b64 = self.draw(x, y, labels)
+        self.parse_raw_data(url, event_en)
+        date, activity = self.parse_database(event_en)
+        x, y = self.decode_data(date, activity, since='20140911')
+        img_b64 = self.draw(x, y, labels=event_en)
 
         cache = self.render_str('activity.html', image_activity=img_b64, 
-            date = date, activity = activity, labels = labels,
+            date = date, activity = activity, labels = event_cn,
             last_updated = Secure.get_format_system_time())
         SportDiary.insert_diary(subject = 'cache', content = repr(cache))
 
         return cache
 
     @classmethod
-    def decode_data(cls, date, activity, labels, since):
+    def decode_data(cls, date, activity, since):
         total = cls.date_dif(date[-1], since)
         x = [i for i in range(total+1)]
-        y = [[0 for j in range(len(labels))] for i in range(total+1)]
+        y = [[0 for j in range(len(activity))] for i in range(total+1)]
         for i in range(len(date)):
             pos = cls.date_dif(date[i], since) 
             y[pos] = [sum(t) for t in activity[i]]
@@ -103,7 +102,7 @@ class Activity(Handler):
         return (d0-d1).days
 
     @classmethod
-    def parse_database(cls, activity):
+    def parse_database(cls, event):
         data = {}
         for diary in SportDiary.all():
             if diary.subject.isdigit():
@@ -111,21 +110,20 @@ class Activity(Handler):
 
         x = sorted(data.iterkeys())
         y = []
-        labels = activity
         for key in x:
             day = data[key]
             format_day = []
-            for act in activity:
-                if act in day:
-                    format_day.append(day[act])
+            for e in event:
+                if e in day:
+                    format_day.append(day[e])
                 else:
                     format_day.append([0])
             y.append(format_day)
 
-        return x, y, activity
+        return x, y
 
     @classmethod
-    def parse_raw_data(cls, url, activity):
+    def parse_raw_data(cls, url, event):
         u = urllib2.urlopen(url)
         if u is None:
             print '---------------- Can not open "%s"' % url
@@ -146,11 +144,11 @@ class Activity(Handler):
             elif tokens[0] == '>':
                 if date == '':
                     continue
-                act = ' '.join(tokens[1].split('_')).lower()
-                if act not in activity:
-                    print('UNKNOWN activity: "%s"' % act)
+                e = ' '.join(tokens[1].split('_')).lower()
+                if e not in event:
+                    print('UNKNOWN event: "%s"' % e)
                 else:
-                    data[act] = [int(num) for num in tokens[2:]]
+                    data[e] = [int(num) for num in tokens[2:]]
             else:
                 pass
         if data != {}:

@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h2>
+<h1>
     Diary<a href='?q=json' class='login-link'>.json</a> (Since Sept 25, 2014)
 
     {% if login_name == 'isuneast' %}
@@ -10,13 +10,12 @@
         <a href='/newdiary' class='login-link'>New Diary</a>
     </div>
     {% endif %}
-</h2>
+</h1>
 
-
-<ul>
+<table class="tableDiary">
 {% for diary in diaries %}
-    <li>
-
+<tr>
+    <td>
     <h2>
         {{ diary.get_subject() }}
         <div class='newentry-link' style='font-size: 13px'>
@@ -31,11 +30,17 @@
             {{ diary.get_created() }}
         </div>
     </h2>
-
+    </td>
+</tr>
+<tr>
+    <td style="background-color: white;">
+    <br>
     {{ diary.get_content() | safe }}
-
-    </li>
+    <br>
+    <br>
+    </td>
+</tr>
 {% endfor %}
-</ul>
+</table>
 
 {% endblock %}

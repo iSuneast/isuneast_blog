@@ -1,51 +1,73 @@
-body {
-    position: relative;
-    font-family: Helvetica, Arial, sans-serif;
-    font-size: 14px;
+article, aside, figure, figcaption, footer, header, hgroup, nav, section, summary {   
+  display: block;   
+}
 
-    width: 800px;
-    margin: 0 auto;
-    padding: 10px;
-    color: #333;
+body {
+  position: relative;
+  margin: 0px auto;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  width: 777px;
+}
+
+header {
+  font-family: Kranky;
+  display: block;
+  margin-bottom: 30px;
+  text-align: center;
+  font-weight: bold;
+}
+
+header a {
+  color: black;
+  text-decoration: none;
+}
+
+header h1 {
+  font-size: 40px;
+}
+
+.tableDiary {
+  width: 100%;
+  background: #f1f1f1;
+}
+
+.tableDiary h2 {
+  text-align: center;
 }
 
 .newentry-link {
-    font-size: 19px;
-    color: gray;
-    position: absolute;
-    right: 10px;
-    display: inline;
+  font-size: 19px;
+  color: gray;
+  position: absolute;
+  right: 10px;
+  display: inline;
 }
 
 .login-area {
-    font-size: 13px;
-    color: gray;
-    position: absolute;
-    top: 10px;
-    right: 10px;
+  font-size: 13px;
+  color: gray;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+a {
+  color: gray;
+  text-decoration: none;  
 }
 
 .login-link {
-    color: gray;
-    text-decoration: none;
-}
-
-.login-link:visited {
-    color: gray;
+  color: gray;
+  text-decoration: none;
 }
 
 .login-link:hover {
-    text-decoration: underline;
-}
-
-h2 {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 20px;
+  text-decoration: underline;
 }
 
 .error {
-    color: red;
+  color: red;
 }
 
 .label {
@@ -57,7 +79,7 @@ label {
   font-size: 20px;
 }
 
-table {
+.tableActivity {
   display: block;
   font-size: 20px;
   text-align: center;
@@ -67,21 +89,14 @@ table {
 }
 
 label + label {
-    margin-top: 20px;
+  margin-top: 20px;
 }
 
-input[type=text] {
-    width: 100%;
-    font-size: 20px;
-    padding: 2px;
-    font-family: monospace;
-}
-
-input[type=password] {
-    width: 100%;
-    font-size: 20px;
-    padding: 2px;
-    font-family: monospace;
+input {
+  width: 100%;
+  font-size: 20px;
+  padding: 2px;
+  font-family: monospace;
 }
 
 textarea {
@@ -90,43 +105,3 @@ textarea {
   font-size: 17px;
   font-family: monospace;
 }
-
-input[type=submit] {
-  font-size: 24px;
-}
-
-.main-title {
-    color: #222;
-    font-size: 40px;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 30px;
-    text-decoration: none;
-}
-
-.post + .post {
-    margin-top: 15px;
-}
-
-.post-heading {
-    position: relative;
-    border-bottom: 3px solid #666;
-}
-
-.post-title {
-    font-size: 24px;
-    font-weight: bold;
-}
-
-.post-date {
-    position: absolute;
-    right: 0px;
-    bottom: 0px;
-    color: #999;
-
-}
-
-.post-content {
-    margin-top: 5px;
-}
-
