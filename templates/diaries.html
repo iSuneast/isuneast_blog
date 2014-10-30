@@ -3,31 +3,45 @@
 {% block content %}
 
 <h1>
-    Diary<a href='?q=json' class='login-link'>.json</a> (Since Sept 25, 2014)
+    Diary<a href='?q=json' class='cute-link'>.json</a> (Since Sept 25, 2014)
 
     {% if login_name == 'isuneast' %}
     <div class='newentry-link'>
-        <a href='/newdiary' class='login-link'>New Diary</a>
+        <a href='/newdiary' class='cute-link'>New Diary</a>
     </div>
     {% endif %}
 </h1>
 
+<aside class='NavSidebar'>
+  <nav>
+    <h1>Diaries List</h1>
+    <ul>
+    {% for diary in diaries %}
+      <li><a href="/diary?id={{diary.get_id()}}">{{diary.get_subject()}}</a></li>
+    {% endfor %}
+    </ul>
+  </nav>
+</aside>
+
+<article class='Content'>
 <table class="tableDiary">
 {% for diary in diaries %}
 <tr>
     <td>
     <h2>
-        {{ diary.get_subject() }}
+        <a href='/diary?id={{diary.get_id()}}'>{{ diary.get_subject() }}</a>
+        <div class='newentry-link' style='font-size: 13px'>
+            {{ diary.get_created() }}
+        </div>
+        <br>
         <div class='newentry-link' style='font-size: 13px'>
             {% if login_name == 'isuneast' %}
             {
-            <a href='/newdiary?id={{diary.get_id()}}&op=del' class='login-link'>Delete</a>
+            <a href='/newdiary?id={{diary.get_id()}}&op=del'>Delete</a>
             |
-            <a href='/newdiary?id={{diary.get_id()}}&op=edit' class='login-link'>Edit</a>
+            <a href='/newdiary?id={{diary.get_id()}}&op=edit'>Edit</a>
             }
             {% endif %}
-
-            {{ diary.get_created() }}
         </div>
     </h2>
     </td>
@@ -42,5 +56,6 @@
 </tr>
 {% endfor %}
 </table>
+</article>
 
 {% endblock %}

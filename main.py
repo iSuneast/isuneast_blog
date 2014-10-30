@@ -217,15 +217,34 @@ class Diary(db.Model):
 
 class DiaryPage(Handler):
     def get(self):
-        diaries = Diary.all().order('-created')
+        if self.proc_json():
+            pass
+        elif self.proc_diary_id():
+            pass
+        else:
+            diaries = Diary.all().order('-created')
+            self.render('diaries.html', diaries = diaries)
 
+    def proc_json(self):
         q = self.request.get('q')
         if q and q == 'json':
+            diaries = Diary.all().order('-created')
+
             self.response.headers['Content-Type'] = 'application/json; charset=UTF-8'
             self.write(json.dumps([diary.as_dict() for diary in diaries],
              ensure_ascii=False))
-        else:
-            self.render('diaries.html', diaries = diaries)
+            
+            return True
+        return False
+
+    def proc_diary_id(self):
+        diary_id = self.request.get('id')
+        if diary_id:
+            diary = Diary.get_by_id(int(diary_id))
+            if diary:
+                self.render('diary_main.html', diary = diary)
+                return True
+        return False
 
 
 class NewDiaryPage(Handler):

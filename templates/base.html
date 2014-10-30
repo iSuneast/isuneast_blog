@@ -3,11 +3,19 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <!-- saved from url=(0014)about:internet -->
     <title>Diary@iSuneast</title>
     <link href='http://fonts.googleapis.com/css?family=Inconsolata|Kranky|Open+Sans:400,700&v2' rel="stylesheet">
-    <!-- saved from url=(0014)about:internet -->
-    <link href="/static/main.css" rel="stylesheet"/>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <script src="/static/bootstrap.js"></script>
+
+    <link href="/static/main.css" rel="stylesheet"/>
+    <script>
+    function CloseBox() {
+        var footer = document.getElementById('BaseFooter');
+        footer.style.display = 'none';
+    }
+    </script>
 </head>
 
 <body>
@@ -34,8 +42,19 @@ Hi,
 
 {% block content %}
 {% endblock %}
+
 </body>
 
+<div id='BaseFooter' onclick='CloseBox()'>
+<footer>
+<p>I am footer. Click me to hide me. :></p>
+</footer>
+</div>
+
+<br>
+<br>
+<br>
+<br>
 <br>
 <br>
 

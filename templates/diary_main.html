@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>
+    <a href='/diary' class='login-link'>Diary</a>
+</h1>
+
+<table class="tableDiary">
+<tr>
+    <td>
+    <h2>
+        <a href='/diary?id={{diary.get_id()}}'>{{ diary.get_subject() }}</a>
+        <div class='newentry-link' style='font-size: 13px'>
+            {% if login_name == 'isuneast' %}
+            {
+            <a href='/newdiary?id={{diary.get_id()}}&op=del' class='login-link'>Delete</a>
+            |
+            <a href='/newdiary?id={{diary.get_id()}}&op=edit' class='login-link'>Edit</a>
+            }
+            {% endif %}
+
+            {{ diary.get_created() }}
+        </div>
+    </h2>
+    </td>
+</tr>
+<tr>
+    <td style="background-color: white;">
+    <br>
+    {{ diary.get_content() | safe }}
+    <br>
+    <br>
+    </td>
+</tr>
+</table>
+
+{% endblock %}
