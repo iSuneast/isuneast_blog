@@ -9,8 +9,7 @@ from lib.user import User, LogInPage, LogOutPage, SignUpPage
 
 plt.switch_backend('Agg')
 
-
-class MainPage(Handler):
+class ExercisePage(Handler):
     def get(self):
         touch_db = self.request.get('touch_db')
         if touch_db != '':
@@ -20,7 +19,7 @@ class MainPage(Handler):
                 Activity().flush(touch_db == 'reset')
                 self.redirect('/')
             return 
-        self.render('main.html', activity=Activity().content())
+        self.render('exercise.html', activity=Activity().content())
 
 
 class SportDiary(db.Model):

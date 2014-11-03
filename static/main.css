@@ -2,16 +2,32 @@ article, aside, figure, figcaption, footer, header, hgroup, nav, section, summar
   display: block;   
 }
 
+.bouncingBalls {
+  text-align: center;
+}
+/*
+.bouncingBalls canvas {
+  border: 1px dashed black;
+}
+*/
+.bouncingBalls table {
+  margin: auto;
+  width: 70%;
+  text-align: right;
+}
+
+.bouncingBalls button {
+  font-size: 22px;
+  font-family: Kranky;
+  height: 100%;
+}
+
 body {
   position: relative;
   margin: 0px auto;
   font-family: Helvetica, Arial, sans-serif;
   font-size: 14px;
   width: 900px;
-}
-
-canvas {
-  border: 1px dashed black;
 }
 
 header {

@@ -2,26 +2,39 @@
 
 {% block content %}
 
-<div style='width: 100%; text-align: center'>
-    <canvas style='display: inline' id="myCanvas" width="680" height="270"></canvas>
+<h1>
+
+</h1>
+
+<div class='bouncingBalls'>
+<canvas id="bouncingBalls" width="900" height="270"></canvas>
+<table>
+<tr>
+  <td><label for='text'>Text:</label></td>
+  <td><input type='text' id='bouncingBalls.text' value='I Love U' title='Input your text here' required autofocus></td>
+  <th rowspan='3'><button onclick='funCanvas()'>GoGoGo!</button></th>
+</tr>
+<tr>
+  <td><label for='font-size'>Font Size (pixels):</label></td>
+  <td><input type='number' id='bouncingBalls.fontsize' value='131.4' title='Font Size (px): recommand 130 px' required></td>
+</tr>
+<tr>
+  <td><label for='ball-radius'>Ball Radius (pixels):</label></td>
+  <td><input type='number' id='bouncingBalls.ballRadius' value='5.20' title='Ball Radius (px): recommand 9 px' required></td>
+</tr>
+<tr>
+  <td><label for='dynamic-balls'>Dynamic Balls:</label></td>
+  <td style='text-align: center;'><input type='checkbox' id='bouncingBalls.dynamicBalls' checked style='width:20px; height:20px;'></td>
+</tr>
+</table>
 </div>
 
 <h1>
-    Amazzzzzzzing <a href='/diary' class='cute-link'>Diary!!!</a>
+    Amazzzzzzzing <a href='/diary' class='cute-link'>Diary</a>
 </h1>
 
 <h1>
-    Exercise <a href='https://twitter.com/isuneast' class='cute-link'>Records</a>
-    {% if login_name == 'isuneast' %}
-    <div class='newentry-link'>
-        <a href='/?touch_db=reset' class='login-link'>Reset Database</a>
-        |
-        <a href='/?touch_db=update' class='login-link'>Update Database</a>
-    </div>
-    {% endif %}
-    <br>
+    Coooooool <a href='/exercise' class='cute-link'>Exercise</a>
 </h1>
-
-{{ activity | safe }}
 
 {% endblock %}

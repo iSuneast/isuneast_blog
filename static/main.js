@@ -54,14 +54,51 @@ function findPixels(data, width, height) {
   };
 }
 
-function findBalls(context, width, height) {
-  context.textBaseline = "top";
-  context.font = "150px Lato";
-  context.fillText("iSuneast", 70, 30);
-  data = context.getImageData(0, 0, width, height).data;
+function renderBalls(canvas, text, fontsize, ballRadius) {
+  var context = canvas.getContext('2d');
+  context.font = fontsize + 'px Lato';
+  context.textAlign = 'center';
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.fillText(text, canvas.width/2, canvas.height/1.5);
+  var data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+
+  return findBalls(data, canvas.width, canvas.height, ballRadius);
+}
+
+function randomPickColor(colors, num, numTry) {
+  if (numTry == null) {
+    numTry = 7;
+  }
+  var bestColor = [];
+  var bestScore = -1e9;
+  for (; numTry > 0; --numTry) {
+    var score = 0;
+    var color = [];
+    for (var i = 0; i < num; ++i) {
+      var tmp;
+      do {
+        tmp = colors.pickVal();
+      } while (i > 0 && tmp == color[i-1]);
+      color.push(tmp);
+      for (var j = 0; j < i; ++j) {
+        if (color[j] == color[i]) {
+          score -= 1. / (i - j - 1);
+        }
+      }
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestColor = color;
+    }
+  }
+  console.log(bestColor);
+  return bestColor;
+}
+
+function findBalls(data, width, height, ballRadius) {
   var radius = new function () {
-    this.min = 9;
-    this.max = 9;
+    this.min = ballRadius;
+    this.max = ballRadius;
     this.pick = function() {
       return randomInt(this.min, this.max);
     }
@@ -75,16 +112,7 @@ function findBalls(context, width, height) {
 
   var cc = findPixels(data, width, height);
   var pixels = cc.pixels;
-  ccColor = [];
-  for (var i = ccColor.length; i < cc.numCC; ++i) {
-    var tmp;
-    do {
-      tmp = color.pickVal();
-    } while (i > 0 && tmp == ccColor[i-1]);
-    ccColor.push(tmp);
-  }
-  ccColor[0] = ccColor[1];
-  console.log(ccColor);
+  ccColor = randomPickColor(color, cc.numCC);
 
   balls = [];
   for (var numBalls = 314; numBalls > 0; --numBalls) {
@@ -221,44 +249,165 @@ function updateBalls(canvas, balls, timeDiff, mousePos) {
   }
 }
 
+function clone(obj) {
+  if (obj == null || typeof obj != 'object') {
+    return obj;
+  }
+  var copy = obj.constructor();
+  for (var attr in obj) {
+    if (obj.hasOwnProperty(attr)) {
+      copy[attr] = obj[attr];
+    }
+  }
+  return copy;
+}
+
 function Ball(x, y, r, vx, vy, color) {
   this.x = x;
   this.y = y;
-  this.r = r;
   this.vx = vx;
   this.vy = vy;
+  // 
   this.color = color;
   this.origX = x;
   this.origY = y;
   this.radius = r;
+  //
+  this.alpha = 1;
+  this.alive = 1;
+  //
+  this.update = function () {
+    if (this.alive == 0) {
+      this.radius *= 1.005;
+      this.alpha *= 0.98;
+      if (this.alpha < 0.005) {
+        this.alpha = 0;
+        this.radius = 0;
+        this.alive = -1;
+      }
+    }
+  }
+  this.demon = function (tar) {
+    this.x = tar.x;
+    this.y = tar.y;
+    this.vx = tar.vx;
+    this.vy = tar.vy;
+  }
 }
 
-function animate(canvas, balls, lastTime, mousePos) {
+var g_animateId = -1;
+var g_balls = [];
+
+function animate(canvas, balls, lastTime, mousePos, animateId) {
+  if (animateId != g_animateId) {
+    return;
+  }
   var context = canvas.getContext('2d');
-
-  // update
-  var date = new Date();
-  var time = date.getTime();
-  var timeDiff = time - lastTime;
+  var curtime = (new Date()).getTime();
+  var timeDiff = curtime - lastTime;
+  lastTime = curtime;
   updateBalls(canvas, balls, timeDiff, mousePos);
-  lastTime = time;
 
-  // clear
   context.clearRect(0, 0, canvas.width, canvas.height);
-
-  // render
   for(var n = 0; n < balls.length; n++) {
     var ball = balls[n];
     context.beginPath();
     context.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI, false);
     context.fillStyle = ball.color;
+    context.globalAlpha = ball.alpha;
     context.fill();
   }
 
-  // request new frame
+  for (var i = 0; i < balls.length; ++i) {
+    balls[i].update();
+    if (balls[i].alive == -1) {
+      balls[i] = balls[balls.length-1];
+      balls.pop();
+      --i;
+    }
+  }
+
   requestAnimFrame(function() {
-    animate(canvas, balls, lastTime, mousePos);
+    animate(canvas, balls, lastTime, mousePos, animateId);
   });
+}
+
+function orderBalls(balls) {
+  var hm = {};
+  for (var i = 0; i < balls.length; ++i) {
+    var ball = balls[i];
+    // every ball is dying
+    ball.alive = 0;
+    if (hm.hasOwnProperty(ball.color)) {
+      hm[ball.color].push(ball);
+    } else {
+      hm[ball.color] = [ball];
+    }
+  }
+  return hm;
+}
+
+function animateNewsBalls(oldBalls, newBalls) {
+  if (oldBalls == null || oldBalls.length == 0) {
+    return newBalls;
+  }
+  var hm = orderBalls(oldBalls);
+  var balls = [];
+  for (var i = 0; i < newBalls.length; ++i) {
+    var ball = newBalls[i];
+    if (hm.hasOwnProperty(ball.color)) {
+      var cands = hm[ball.color];
+      var oldBall = cands[randomInt(0, cands.length)];
+      ++oldBall.alive;
+      ball.demon(oldBall);
+    } else {
+      var oldBall = oldBalls[randomInt(0, oldBalls.length)];
+      ball.demon(oldBall);      
+    }
+    balls.push(ball);
+  }
+
+  for (var i = 0; i < oldBalls.length; ++i) {
+    var oldBall = oldBalls[i];
+    if (oldBall.alive == 0) {
+      balls.push(oldBall);
+    }
+  }
+
+  return balls;
+}
+
+function funCanvas() {
+  var canvas = document.getElementById('bouncingBalls');
+  var text = document.getElementById('bouncingBalls.text').value;
+  var fontsize = document.getElementById('bouncingBalls.fontsize').value;
+  var ballRadius = document.getElementById('bouncingBalls.ballRadius').value;
+  var dynamic = document.getElementById('bouncingBalls.dynamicBalls').checked;
+  ballRadius = Math.floor(parseFloat(ballRadius));
+  var balls = renderBalls(canvas, text, fontsize, ballRadius);
+
+  if (dynamic) {
+    balls = animateNewsBalls(g_balls, balls);    
+  }
+  g_balls = balls;
+
+  var time = (new Date()).getTime();
+  var mousePos = {
+    x: 1e9,
+    y: 1e9
+  };
+  canvas.addEventListener('mousemove', function(evt) {
+    var pos = getMousePos(canvas, evt);
+    mousePos.x = pos.x;
+    mousePos.y = pos.y;
+  });
+  canvas.addEventListener('mouseout', function(evt) {
+    mousePos.x = 1e9;
+    mousePos.y = 1e9;
+  });
+
+  ++g_animateId;
+  animate(canvas, balls, time, mousePos, g_animateId);
 }
 
 window.onload = function () {
@@ -266,29 +415,8 @@ window.onload = function () {
     return window.requestAnimationFrame || window.webkitRequestAnimationFrame 
       || window.mozRequestAnimationFrame || window.oRequestAnimationFrame 
       || window.msRequestAnimationFrame || function(callback) {
-      window.setTimeout(callback, 1000 / 60);
+      window.setTimeout(callback, 1000 / 30);
     };
   })();
-
-  var canvas = document.getElementById('myCanvas');
-  var context = canvas.getContext('2d');
-  var balls = findBalls(context, canvas.width, canvas.height);
-  var date = new Date();
-  var time = date.getTime();
-  var mousePos = {
-    x: 1e9,
-    y: 1e9
-  };
-
-  canvas.addEventListener('mousemove', function(evt) {
-    var pos = getMousePos(canvas, evt);
-    mousePos.x = pos.x;
-    mousePos.y = pos.y;
-  });
-
-  canvas.addEventListener('mouseout', function(evt) {
-    mousePos.x = 1e9;
-    mousePos.y = 1e9;
-  });
-  animate(canvas, balls, time, mousePos);  
+  funCanvas();
 }
