@@ -1,61 +1,30 @@
-
 {% extends "base.html" %}
 
 {% block content %}
 
-<h2>
-Sign Up
-</h2>
+<h1>Sign Up</h1>
 
 <form method="post">
-    <table>
-        <tr>
-            <td>
-                <label>
-                    UserName
-                </label>
-            </td>
-            <td>
-                <input type="text" name="username" value="{{username}}">
-            </td>
-        </tr>
-
-        <tr>
-            <td>
-                <label>
-                    Password
-                </label>
-            </td>
-            <td>
-                <input type="password" name="password">
-            </td>
-        </tr>
-
-        <tr>
-            <td>
-                <label>
-                    Verify Password
-                </label>
-            </td>
-            <td>
-                <input type="password" name="verify">
-            </td>
-        </tr>
-
-        <tr>
-            <td>
-                <div class="error">
-                    {{error}}
-                </div>
-            </td>
-        </tr>
-
-        <tr>
-            <td>
-                <input type="submit">
-            </td>
-        </tr>
-    </table>
+<table>
+<tr>
+    <td><label for='username'>UserName</label></td>
+    <td><input type="text" name="username" value="{{username}}" required autofocus></td>
+</tr>
+<tr>
+    <td><label for='password'>Password</label></td>
+    <td><input type="password" name="password" required></td>
+</tr>
+<tr>
+    <td><label>Verify Password</label></td>
+    <td><input type="password" name="verify" required></td>
+</tr>
+<tr>
+    <td><div class="error">{{error}}</div></td>
+</tr>
+<tr>
+    <th colspan='2'><input type="submit"></th>
+</tr>
+</table>
 </form>
 
 {% endblock %}

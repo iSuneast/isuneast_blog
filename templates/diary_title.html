@@ -1,0 +1,14 @@
+<a href='/diary?id={{diary.get_id()}}'>{{ diary.get_subject() }}</a>
+<div class='newentry-link' style='font-size: 13px'>
+    {{ diary.get_created() }}
+</div>
+<br>
+<div class='newentry-link' style='font-size: 13px'>
+    {% if login_name == 'isuneast' %}
+    {
+    <a href='/newdiary?id={{diary.get_id()}}&op=del'>Delete</a>
+    |
+    <a href='/newdiary?id={{diary.get_id()}}&op=edit'>Edit</a>
+    }
+    {% endif %}
+</div>

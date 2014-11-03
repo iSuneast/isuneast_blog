@@ -6,16 +6,24 @@
     <!-- saved from url=(0014)about:internet -->
     <title>Diary@iSuneast</title>
     <link href='http://fonts.googleapis.com/css?family=Inconsolata|Kranky|Open+Sans:400,700&v2' rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Lato:100' rel='stylesheet' type='text/css'>    
     <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <script src="/static/bootstrap.js"></script>
 
-    <link href="/static/main.css" rel="stylesheet"/>
     <script>
-    function CloseBox() {
-        var footer = document.getElementById('BaseFooter');
-        footer.style.display = 'none';
-    }
+    WebFontConfig = {
+      google: { families: [ 'Lato:100:latin' ] }
+    }; (function() {
+      var wf = document.createElement('script');
+      wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+        '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+      wf.type = 'text/javascript';
+      wf.async = 'true';
+      var s = document.getElementsByTagName('script')[0];
+      s.parentNode.insertBefore(wf, s);
+    })();
     </script>
+    <link href="/static/main.css" rel="stylesheet"/>
+    <script src="/static/main.js"></script>
 </head>
 
 <body>
@@ -23,39 +31,24 @@
 <header>
     <hgroup>
     <h1>
-        <a href="/login" style="font-size: 64px;"><i>I</i></a>
-        <a href="/">, am the MAN page</a>
+        <a href="/login" style='font-size: 64px'>I</a>
+        <a href="/">, am the MAN page!!!</a>
     </h1>
     <h2>
-        <a href="http://i.cs.hku.hk/~wbtang/">BTW, who am I?</a>
+        <a href="http://i.cs.hku.hk/~wbtang/">the MAN???</a>
     </h2>
     </hgroup>
 </header>
 
-<div class="login-area">
 {% if login_name and login_name != '' %}
-Hi, 
-    {{login_name}}
-    <a href="/logout">Log Out</a>
-{% endif %}
+<div class="login-area">
+    Hi, {{login_name}} <a href="/logout">Log Out</a>
 </div>
+{% endif %}
 
 {% block content %}
 {% endblock %}
 
 </body>
-
-<div id='BaseFooter' onclick='CloseBox()'>
-<footer>
-<p>I am footer. Click me to hide me. :></p>
-</footer>
-</div>
-
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
 
 </html>

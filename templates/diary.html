@@ -1,14 +1,19 @@
+{% extends "base.html" %}
 
-<h2>
-    {{ subject }}
-    <div class='editor-link'>
-        {{ created }}
-        {% if login_name == 'isuneast' %}
-        <a href='./edit' class='editor-link'>Delete</a>
-        |
-        <a href='./edit' class='editor-link'>Edit</a>
-        {% endif %}
-    </div>
-</h2>
+{% block content %}
+<h1>
+    <a href='/diary' class='login-link'>Diary</a>
+</h1>
 
-{{ content | safe }}
+<table class="tableDiary">
+<tr>
+    <td><h2>{% include 'diary_title.html' %}</h2></td>
+</tr>
+<tr>
+    <td style="background-color: white;">
+    {{ diary.get_content() | safe }}
+    </td>
+</tr>
+</table>
+
+{% endblock %}

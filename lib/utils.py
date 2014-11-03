@@ -1,16 +1,12 @@
 import os
-import re
 import random
 import hashlib
 import string
 import hmac
-import json
 import webapp2
 import jinja2
-import pprint
 import datetime
 from pytz.gae import pytz
-from google.appengine.ext import db
 
 class Handler(webapp2.RequestHandler):
     __template_dir = os.path.join(os.path.dirname(__file__), '../templates')

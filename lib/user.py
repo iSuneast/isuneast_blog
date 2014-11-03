@@ -1,3 +1,4 @@
+#encoding:utf-8
 import re
 from google.appengine.ext import db
 from lib.utils import Handler, Secure

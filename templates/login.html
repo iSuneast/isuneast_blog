@@ -1,48 +1,29 @@
-
 {% extends "base.html" %}
 
 {% block content %}
 
-<h2>
-Log In
-</h2>
+<h1>Log In</h1>
 
 <form method="post">
-    <table>
-        <tr>
-            <td>
-                <label>
-                    UserName
-                </label>
-            </td>
-            <td>
-                <input type="text" name="username" value="{{username}}">
-            </td>
-        </tr>
+<table>
+<tr>
+    <td><label for='name'>UserName</label></td>
+    <td><input type="text" name="username" value="{{username}}" autofocus required></td>
+</tr>
 
-        <tr>
-            <td>
-                <label>
-                    Password
-                </label>
-            </td>
-            <td>
-                <input type="password" name="password">
-            </td>
-        </tr>
+<tr>
+    <td><label for='password'>Password</label></td>
+    <td><input type="password" name="password" required></td>
+</tr>
 
-        <tr>
-            <div class="error">
-                {{error}}
-            </div>
-        </tr>
+<tr>
+    <div class="error">{{error}}</div>
+</tr>
 
-        <tr>
-            <td>
-                <input type="submit">
-            </td>
-        </tr>
-    </table>
+<tr>
+    <td><input type="submit"></td>
+</tr>
+</table>
 </form>
 
 {% endblock %}
