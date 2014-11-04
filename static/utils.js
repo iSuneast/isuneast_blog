@@ -1,4 +1,14 @@
 
+function sign(v) {
+  if (v > 0) {
+    return 1;
+  } else if (v < 0) {
+    return -1;
+  } else {
+    return 0;
+  }
+}
+
 function randomInt(minV, maxV) {
   return Math.floor(Math.random() * (maxV - minV)) + minV;
 }

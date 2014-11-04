@@ -2,29 +2,29 @@
 
 {% block content %}
 
-<h1>
-
+<h1 class='cute-link' style='text-align: center'>
+  Stuuupid ball game, Sooooooo easy!!!
 </h1>
 
-<div class='bouncingBalls'>
-<canvas id="bouncingBalls" width="900" height="270"></canvas>
-<table>
+<div class="bouncingBalls">
+<canvas style='border: 1px dashed black;' id="bouncingBalls" width="900" height="270"></canvas>
+<table onkeydown="if (event.keyCode == 13) { updateCanvas(); return false; }">
 <tr>
-  <td><label for='text'>Text:</label></td>
-  <td><input type='text' id='bouncingBalls.text' value='I Love U' title='Input your text here' required autofocus></td>
-  <th rowspan='3'><button onclick='funCanvas()'>GoGoGo!</button></th>
+  <td><label for="text">Text (10 Chars):</label></td>
+  <td><input type="text" id="bouncingBalls.text" value="Push Me Out" title="Input your text here" required="" autofocus=""></td>
+  <th rowspan="3"><button onclick="updateCanvas()">GoGoGo!</button></th>
 </tr>
 <tr>
-  <td><label for='font-size'>Font Size (pixels):</label></td>
-  <td><input type='number' id='bouncingBalls.fontsize' value='131.4' title='Font Size (px): recommand 130 px' required></td>
+  <td><label for="font-size">Font Size (pixels):</label></td>
+  <td><input type="number" id="bouncingBalls.fontsize" value="150" title="Font Size (px): recommand 150 px" required=""></td>
 </tr>
 <tr>
-  <td><label for='ball-radius'>Ball Radius (pixels):</label></td>
-  <td><input type='number' id='bouncingBalls.ballRadius' value='5.20' title='Ball Radius (px): recommand 9 px' required></td>
+  <td><label for="ball-radius">Ball Radius (pixels):</label></td>
+  <td><input type="number" id="bouncingBalls.ballRadius" value="10" title="Ball Radius (px): recommand 10 px" required=""</td>
 </tr>
 <tr>
-  <td><label for='dynamic-balls'>Dynamic Balls:</label></td>
-  <td style='text-align: center;'><input type='checkbox' id='bouncingBalls.dynamicBalls' checked style='width:20px; height:20px;'></td>
+  <td><label for="game-mode">Game Mode:</label></td>
+  <td style="text-align: center;"><input type="checkbox" id="bouncingBalls.gameMode" checked class='bouncingBalls-checkbox'></td>
 </tr>
 </table>
 </div>

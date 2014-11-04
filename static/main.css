@@ -22,6 +22,11 @@ article, aside, figure, figcaption, footer, header, hgroup, nav, section, summar
   height: 100%;
 }
 
+.bouncingBalls-checkbox {
+  width: 20px;
+  height: 20px;
+}
+
 body {
   position: relative;
   margin: 0px auto;
