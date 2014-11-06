@@ -2,6 +2,16 @@ article, aside, figure, figcaption, footer, header, hgroup, nav, section, summar
   display: block;   
 }
 
+@font-face {
+  font-family: Lato;
+  src: url('/static/Lato-Hairline.ttf');
+} 
+@font-face {
+  font-family: Kranky;
+  src: url('/static/Kranky.ttf');
+}
+
+
 .bouncingBalls {
   text-align: center;
 }

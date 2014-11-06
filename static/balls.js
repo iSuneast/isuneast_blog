@@ -13,10 +13,13 @@ function GameConf() {
   // conf
   this.color = null;
   this.gameMode = null;
+  this.fontFamily = null;
+  this.debugMode = false;
   // data
   this.text = null;
   this.fontsize = null;
   this.ballRadius = null;
+
   this.drawStartButton = function () {
     return this.gameMode == true && !this.started();
   }
@@ -38,6 +41,7 @@ function GameConf() {
     this.color.add('red', '#EF2B36');
     this.color.add('yellow', '#FFC636');
     this.color.add('green', '#02A817');
+    this.fontFamily = 'Lato';
   }
   this.initGame = function (canvas, text, fontsize, ballRadius, gameMode) {
     this.text = text;
@@ -85,9 +89,13 @@ function GameConf() {
 
 var gameConf = new GameConf();
 
-function isEmptyPixel(data, row, col, width, height) {
-  if (0 <= row && row < height && 0 <= col && col < width) {
-    var offset = (row * width + col) * 4;
+function isPixelInsideRect(row, col, numRows, numCols) {
+  return 0 <= row && row < numRows && 0 <= col && col < numCols;
+}
+
+function isEmptyPixel(data, row, col, numRows, numCols) {
+  if (isPixelInsideRect(row, col, numRows, numCols)) {
+    var offset = (row * numCols + col) * 4;
     for (var i = 0; i < 4; ++i) {
       if (data[offset + i] != 0) {
         return false;
@@ -97,42 +105,147 @@ function isEmptyPixel(data, row, col, width, height) {
   return true;
 }
 
-function floodFill(data, width, height, row, col) {
+function floodFill(g, row, col) {
   var dx = [0, 0, 1, -1, 1, 1, -1, -1];
-  var dy = [1, -1, 0, 0, 1, -1, 1, -1]; 
+  var dy = [1, -1, 0, 0, 1, -1, 1, -1];
   var pixels = new RandomPickHashSet();
   pixels.add([row, col]);
   for (var i = 0; i < pixels.vec.length; ++i) {
     cur = pixels.vec[i];
     for (var d = 0; d < dx.length; ++d) {
-      var tx = cur[0] + dx[d];
-      var ty = cur[1] + dy[d];
-      if (!pixels.find([tx, ty]) && !isEmptyPixel(data, tx, ty, width, height)) {
-        pixels.add([tx, ty]);
+      var trow = cur[0] + dx[d];
+      var tcol = cur[1] + dy[d];
+      if (isPixelInsideRect(trow, tcol, g.numRows, g.numCols) && !pixels.find([trow, tcol]) && g.data[trow][tcol] != 0) {
+        pixels.add([trow, tcol]);
       }
     }
   }
   return pixels.vec;
 }
 
-function findPixels(data, width, height) {
+function findCC(g) {
   var pixels = new RandomPickHashMap();
   var numCC = 0;
-  for (var col = 0; col < width; ++col) {
-    for (var row = 0; row < height; ++row) {
-      if (!isEmptyPixel(data, row, col, width, height) 
-        && !pixels.find([col, row])) {
-        var cc = floodFill(data, width, height, row, col);
+  // scan by col -> row
+  for (var col = 0; col < g.numCols; ++col) {
+    for (var row = 0; row < g.numRows; ++row) {
+      if (g.data[row][col] != 0 && !pixels.find([row, col])) {
+        var cc = floodFill(g, row, col);
         for (var i = 0; i < cc.length; ++i) {
-          pixels.add([cc[i][1], cc[i][0]], numCC);
+          pixels.add([cc[i][0], cc[i][1]], numCC);
         }
         ++numCC;
       }
     }
   }
+  console.log('numCC: ' + numCC);
   return {
     pixels: pixels,
     numCC: numCC
+  };
+}
+
+function findPeakPixels(g) {
+  var q = [];
+  for (var row = 0; row < g.numRows; ++row) {
+    for (var col = 0; col < g.numCols; ++col) {
+      if (g.data[row][col] == 0) {
+        q.push([row, col]);
+      }
+    }
+  }
+
+  var dx = [0, 0, 1, -1, 1, 1, -1, -1];
+  var dy = [1, -1, 0, 0, 1, -1, 1, -1];
+  for (var i = 0; i < q.length; ++i) {
+    var row = q[i][0];
+    var col = q[i][1];
+    var dist = g.data[row][col] + 1;
+    for (var d = 0; d < dx.length; ++d) {
+      var trow = row + dx[d];
+      var tcol = col + dy[d];
+      if (isPixelInsideRect(trow, tcol, g.numRows, g.numCols) && g.data[trow][tcol] > dist) {
+        g.data[trow][tcol] = dist;
+        q.push([trow, tcol]);
+      }
+    }
+  }
+
+  var peak = [];
+  for (var row = 0; row < g.numRows; ++row) {
+    for (var col = 0; col < g.numCols; ++col) {
+      var ok = true;
+      for (var d = 0; d < dx.length; ++d) {
+        var trow = row + dx[d];
+        var tcol = col + dy[d];
+        if (isPixelInsideRect(trow, tcol, g.numRows, g.numCols)) {
+          if (g.data[row][col] < g.data[trow][tcol]) {
+            ok = false;
+            break;
+          }
+        }
+      }
+      if (ok) {
+        peak.push([row, col]);
+      }
+    }
+  }
+  return peak;
+}
+
+function findGraphMatrix(rowData, width, height) {
+  var numRows = height;
+  var numCols = width;
+  var data = new Array(numRows);
+  var cnt = 0;
+  for (var row = 0; row < numRows; ++row) {
+    data[row] = new Array(numCols);
+    for (var col = 0; col < numCols; ++col) {
+      if (!isEmptyPixel(rowData, row, col, numRows, numCols)) {
+        data[row][col] = 1e9;
+        ++cnt;
+      } else {
+        data[row][col] = 0;
+      }
+    }
+  }
+  return {
+    data: data,
+    numRows: numRows,
+    numCols: numCols
+  };
+}
+
+function findPeakInCC(peak, cc) {
+  var pixels = new RandomPickHashMap();
+  for (var i = 0; i < peak.length; ++i) {
+    if (cc.pixels.find(peak[i])) {
+      // swap [row, col] data to [col, row]
+      pixels.add([peak[i][1], peak[i][0]], cc.pixels.get(peak[i]));
+    }
+  }
+  return pixels;
+}
+
+function findPixels(data, width, height) {
+  var g = findGraphMatrix(data, width, height);
+  var cc = findCC(g);
+  var peak = findPeakPixels(g);
+  var pixels = findPeakInCC(peak, cc);
+  /*
+  var tmpcc = new RandomPickHashMap();
+  for (var i = 0; i < cc.pixels.vec.length; ++i) {
+    tmpcc.add([cc.pixels.vec[i][0][1], cc.pixels.vec[i][0][0]], cc.pixels.vec[i][1]);
+//    cc.pixels.vec[i][0] = [cc.pixels.vec[i][0][1], cc.pixels.vec[i][0][0]];
+  }
+  return {
+    pixels: tmpcc,
+    numCC: cc.numCC,
+  }
+  */
+  return {
+    pixels: pixels,
+    numCC: cc.numCC
   };
 }
 
@@ -141,7 +254,7 @@ function drawText(canvas, text, fontsize, alpha) {
     alpha = 1;
   }
   var context = canvas.getContext('2d');
-  context.font = fontsize + 'px Lato';
+  context.font = fontsize + 'px ' + gameConf.fontFamily;
   context.textAlign = 'center';
   context.globalAlpha = alpha;
   context.fillText(text, canvas.width/2, canvas.height/1.5);  
@@ -199,6 +312,20 @@ function findBalls(data, width, height, ballRadius) {
   }
 
   var cc = findPixels(data, width, height);
+
+  /*
+  var canvas = document.getElementById('bouncingBalls');
+  var context = canvas.getContext('2d');
+
+  context.clearRect(0, 0, width, height);
+  for (var i = 0; i < cc.pixels.vec.length; ++i) {
+    context.beginPath();
+    context.fillRect(cc.pixels.vec[i][0][0] + 300, cc.pixels.vec[i][0][1], 1, 1);
+    context.stroke();
+  }
+  drawText(canvas, gameConf.text, 150, 1);
+  */
+
   var pixels = cc.pixels;
   ccColor = randomPickColor(gameConf.color, cc.numCC);
 
@@ -256,10 +383,10 @@ function updateBalls(canvas, balls, timeDiff, mousePos, moveForceMul) {
   for(var n = 0; n < balls.length; n++) {
     var ball = balls[n];
     ball.move();
+    ball.testCollision(canvas.width, canvas.height);
     ball.restoreForces(restoreForce);
     ball.moveForces(mousePos.x, mousePos.y, moveForce);
     ball.friction(friction);
-    ball.testCollision(canvas.width, canvas.height);
   }
 }
 

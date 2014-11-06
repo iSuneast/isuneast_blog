@@ -54,7 +54,7 @@ function animateBalls (canvas, timeDiff, mousePos) {
   }
 }
 
-function animateTimer (canvas, timeDiff, mousePos) {
+function animateTimer (canvas, timeDiff, mousePos, fps) {
   if (!gameConf.gameMode) {
     return ;
   }
@@ -67,6 +67,7 @@ function animateTimer (canvas, timeDiff, mousePos) {
   text = '';
   text += ' Balls: ' + gameConf.balls.length + '/' + gameConf.numBalls;
   text += ' DiDa: ' + (timeDiff / 1000.).toFixed(1);
+  text += gameConf.debugMode? ' fps: ' + fps: '';
   if (gameConf.clearTime != null) {
     text += '              ' + 'Sooooooo easy!!!';
   }
@@ -95,7 +96,7 @@ function animateTimer (canvas, timeDiff, mousePos) {
 function animate (canvas, lastTime, mousePos) {
   var context = canvas.getContext('2d');
   var curTime = (new Date()).getTime();
-  // timeDiff: at most 100 ms
+  // timeDiff: at most 1000 ms
   var timeDiff = Math.min(100, curTime - lastTime);
   var escapedTime = gameConf.escapedTime(curTime);
   lastTime = curTime;
@@ -105,9 +106,10 @@ function animate (canvas, lastTime, mousePos) {
   if (gameConf.gameMode) {
     drawText(canvas, gameConf.text, gameConf.fontsize, 0.1);
   }
+  
   animateBalls(canvas, timeDiff, mousePos);
   animateStartButton(canvas, timeDiff, mousePos);
-  animateTimer(canvas, escapedTime, mousePos);
+  animateTimer(canvas, escapedTime, mousePos, Math.floor(1000. / timeDiff));
 
   requestAnimFrame(function() {animate(canvas, lastTime, mousePos);});
 }
@@ -126,11 +128,16 @@ function updateCanvas() {
 
 window.onload = function () {
   window.requestAnimFrame = (function(callback) {
-    return window.requestAnimationFrame || window.webkitRequestAnimationFrame 
-      || window.mozRequestAnimationFrame || window.oRequestAnimationFrame 
-      || window.msRequestAnimationFrame || function(callback) {
-      window.setTimeout(callback, 1000 / 25);
-    };
+    return (
+    window.requestAnimationFrame || 
+    window.webkitRequestAnimationFrame || 
+    window.mozRequestAnimationFrame || 
+    window.oRequestAnimationFrame || 
+    window.msRequestAnimationFrame || 
+    function(callback) {
+      window.setTimeout(callback, 1000 / 60);
+    }
+    );
   })();
   gameConf.init();
 

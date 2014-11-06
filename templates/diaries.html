@@ -17,7 +17,7 @@
     <h1>Diaries List</h1>
     <ul>
     {% for diary in diaries %}
-      <li><a href="/diary?id={{diary.get_id()}}">{{diary.get_subject()}}</a></li>
+      <li><a href="?id={{diary.get_id()}}">{{diary.get_subject()}}</a></li>
     {% endfor %}
     </ul>
   </nav>
